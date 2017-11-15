@@ -1,0 +1,43 @@
+version: '2'
+
+services:
+
+  db:
+    build: mysql
+    volumes:
+        - ${WORDPRESS_APP_PATH}:/var/www/html
+        - "./.data/${MYSQL_DATABASE}:/var/lib/mysql"
+    env_file:
+      - .env
+    networks:
+      - wp-network
+
+  phpmyadmin:
+    image: corbinu/docker-phpmyadmin
+    env_file:
+      - .env
+    links:
+       - db:${MYSQL_DATABASE}
+    ports:
+      - 8080:80
+    networks:
+      - wp-network
+
+  wp_project:
+    build: wordpress
+    depends_on:
+       - db
+    env_file:
+      - .env
+    ports:
+      - "80:80"
+    volumes:
+      - ${WORDPRESS_APP_PATH}:/var/www/html
+      - ./logs/apache2:/var/log/apache2
+      - ./logs/sites-enabled:/etc/apache2/sites-enabled/
+    networks:
+      - wp-network
+
+networks:
+  wp-network:
+    driver: bridge
