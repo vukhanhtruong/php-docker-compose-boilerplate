@@ -1,0 +1,50 @@
+version: '2'
+
+services:
+    db:
+        build: mysql
+        volumes:
+            - "./.data/db:/var/lib/mysql"
+        environment:
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+        networks:
+          - drupal-network
+    php:
+        build:
+            context: php5-fpm
+            args:
+                TIMEZONE: ${TIMEZONE}
+        volumes:
+            - ${DRUPAL_APP_PATH}:/var/www/drupal
+        networks:
+          - drupal-network
+    nginx:
+        build: nginx
+        ports:
+            - 80:80
+        volumes_from:
+            - php
+        volumes:
+            - ./logs/nginx/:/var/log/nginx
+        networks:
+          - drupal-network
+
+    phpmyadmin:
+        image: corbinu/docker-phpmyadmin
+        links:
+           - db:db
+        ports:
+          - 8080:80
+        environment:
+            MYSQL_USERNAME: ${MYSQL_DATABASE}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+            MYSQL_PORT_3306_TCP_ADDR: db
+        networks:
+          - drupal-network
+
+networks:
+  drupal-network:
+    driver: bridge
