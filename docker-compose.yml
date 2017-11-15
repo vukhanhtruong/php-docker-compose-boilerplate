@@ -1,0 +1,50 @@
+version: '2'
+
+services:
+    db:
+        build: mysql
+        volumes:
+            - "./.data/db:/var/lib/mysql"
+        environment:
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+        networks:
+          - symfony-network
+    php:
+        build:
+            context: php7-fpm
+            args:
+                TIMEZONE: ${TIMEZONE}
+        volumes:
+            - ${SYMFONY_APP_PATH}:/var/www/html
+            - ./logs/sitetheory:/var/www/html/app/logs
+        networks:
+          - symfony-network
+    nginx:
+        build: nginx
+        ports:
+            - 80:80
+        volumes_from:
+            - php
+        volumes:
+            - ./logs/nginx/:/var/log/nginx
+        networks:
+          - symfony-network
+    phpmyadmin:
+        image: corbinu/docker-phpmyadmin
+        links:
+           - db:db
+        ports:
+          - 8080:80
+        environment:
+            MYSQL_USERNAME: ${MYSQL_USERNAME}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+            MYSQL_PORT_3306_TCP_ADDR: db
+        networks:
+          - symfony-network
+
+networks:
+  symfony-network:
+    driver: bridge
