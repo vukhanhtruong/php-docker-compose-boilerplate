@@ -25,6 +25,6 @@ git branch -a
 
 git checkout <branch you want to work on>
 
-# Please read README.md file before run the following command
+# Please check the README.md file in each branch before running the following command
 docker-compose up -d
 ```
